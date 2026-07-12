@@ -1,0 +1,6 @@
+bin_type,length_in,width_in,height_in,weight_cap_lb,num_available,zone
+Small Shelf,36,24,18,250,40,general
+Standard Rack,48,44,40,1500,60,general
+Bulk Rack,96,48,60,1750,40,general
+Floor Spot,96,96,90,10000,35,general
+Hazmat Rack,48,44,40,1500,30,hazmat
