@@ -21,15 +21,17 @@ You are given three CSV files (all data is synthetic):
 ## The data
 
 ### `parts.csv`
+
 One row per part.
 
-| Column       | Meaning                                              |
-|--------------|------------------------------------------------------|
-| `part_id`    | Unique part identifier                               |
-| `quantity`   | Number of **units** on hand that must be stored      |
-| `hazmat`     | `Y` if the part is hazardous, else `N`               |
+| Column     | Meaning                                         |
+| ---------- | ----------------------------------------------- |
+| `part_id`  | Unique part identifier                          |
+| `quantity` | Number of **units** on hand that must be stored |
+| `hazmat`   | `Y` if the part is hazardous, else `N`          |
 
 ### `packaging.csv`
+
 One row per **packaging level** of a part. A part can be handled at up to three
 levels, and each level has its **own footprint and weight**:
 
@@ -39,15 +41,15 @@ levels, and each level has its **own footprint and weight**:
 
 Not every part has a case or a pallet level.
 
-| Column              | Meaning                                                    |
-|---------------------|------------------------------------------------------------|
-| `part_id`           | Links to `parts.csv`                                        |
-| `level`             | `each`, `case`, or `pallet`                                 |
-| `units_per_package` | How many units this package contains                       |
-| `length_in`         | Length of this package (inches)                            |
-| `width_in`          | Width of this package (inches)                             |
-| `height_in`         | Height of this package (inches)                            |
-| `weight_lb`         | **Total** weight of one full package (pounds)              |
+| Column              | Meaning                                       |
+| ------------------- | --------------------------------------------- |
+| `part_id`           | Links to `parts.csv`                          |
+| `level`             | `each`, `case`, or `pallet`                   |
+| `units_per_package` | How many units this package contains          |
+| `length_in`         | Length of this package (inches)               |
+| `width_in`          | Width of this package (inches)                |
+| `height_in`         | Height of this package (inches)               |
+| `weight_lb`         | **Total** weight of one full package (pounds) |
 
 **You must decide how to break a part's `quantity` into packages.** The intended
 approach is largest-first: fill as many **pallets** as possible, then **cases**
@@ -58,17 +60,18 @@ A single part may therefore occupy a **mix** of pallets, cases, and eaches, and
 each of those package forms must be slotted (each has its own size and weight).
 
 ### `bins.csv`
+
 One row per bin **type**.
 
-| Column          | Meaning                                                     |
-|-----------------|-------------------------------------------------------------|
-| `bin_type`      | Name of the bin type                                        |
-| `length_in`     | Usable inside length (inches)                               |
-| `width_in`      | Usable inside width (inches)                                |
-| `height_in`     | Usable inside height (inches)                               |
-| `weight_cap_lb` | Max **total** weight allowed in one bin of this type        |
-| `num_available` | How many empty bins of this type exist (a finite pool)      |
-| `zone`          | `general` or `hazmat`                                       |
+| Column          | Meaning                                                |
+| --------------- | ------------------------------------------------------ |
+| `bin_type`      | Name of the bin type                                   |
+| `length_in`     | Usable inside length (inches)                          |
+| `width_in`      | Usable inside width (inches)                           |
+| `height_in`     | Usable inside height (inches)                          |
+| `weight_cap_lb` | Max **total** weight allowed in one bin of this type   |
+| `num_available` | How many empty bins of this type exist (a finite pool) |
+| `zone`          | `general` or `hazmat`                                  |
 
 ---
 
