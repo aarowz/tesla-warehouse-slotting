@@ -11,6 +11,17 @@ from report import print_summary
 
 
 def solve():
+    """
+    Greedy slotting: read data, assign each part to a bin type, write results.
+
+    Let P = #parts, B = #bin types, K = #packaging rows (≤ 3P).
+    Time:  O(P·B log B + K)
+           — sorting parts is O(P log P); per part we score B candidates in
+             O(B) and sort them in O(B log B); packaging lookup build is O(K).
+    Space: O(P + K + B)
+           — pkg_levels dict holds all K rows; pool, sorted_parts, and results
+             are each at most O(P) or O(B); candidates list is O(B) per iteration.
+    """
     parts_rows = read_csv(DATA_DIR / "parts.csv")
     pkg_rows = read_csv(DATA_DIR / "packaging.csv")
     bins_rows = read_csv(DATA_DIR / "bins.csv")

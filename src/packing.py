@@ -10,6 +10,9 @@ def pkgs_per_bin(pkg, bin_row):
     How many packages of one form fit in one bin of one type.
     Packages may rotate on the floor (l/w swap) but height is fixed.
     Returns 0 if the package cannot fit at all.
+
+    Time: O(1) — fixed arithmetic.
+    Space: O(1).
     """
     l, w, h = float(pkg["length_in"]), float(pkg["width_in"]), float(pkg["height_in"])
     wt = float(pkg["weight_lb"])
@@ -32,6 +35,9 @@ def break_quantity(quantity, pkg_levels):
     """
     Greedy largest-first decomposition: pallets → cases → eaches.
     Returns (n_pallet, n_case, n_each).
+
+    Time: O(1) — iterates over at most 3 fixed packaging levels.
+    Space: O(1).
     """
     rem = quantity
     n_pallet = n_case = n_each = 0
@@ -52,6 +58,9 @@ def total_bins_needed(n_pallet, n_case, n_each, pkg_levels, bin_row):
     """
     Total bins of bin_row type needed to store one part's full inventory.
     Returns None if any required package form cannot fit in this bin type.
+
+    Time: O(1) — at most 3 packaging levels; each calls pkgs_per_bin in O(1).
+    Space: O(1).
     """
     total = 0
     for level, count in [("pallet", n_pallet), ("case", n_case), ("each", n_each)]:
@@ -67,7 +76,12 @@ def total_bins_needed(n_pallet, n_case, n_each, pkg_levels, bin_row):
 
 
 def part_volume_and_weight(n_pallet, n_case, n_each, pkg_levels):
-    """Total cubic inches and pounds of all packages for one part."""
+    """
+    Total cubic inches and pounds of all packages for one part.
+
+    Time: O(1) — at most 3 packaging levels.
+    Space: O(1).
+    """
     vol = wt = 0.0
     for level, count in [("pallet", n_pallet), ("case", n_case), ("each", n_each)]:
         if count == 0:

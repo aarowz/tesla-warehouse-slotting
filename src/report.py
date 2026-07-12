@@ -8,6 +8,13 @@ from packing import part_volume_and_weight
 
 
 def print_summary(results, unplaceable, bins_rows, pkg_levels):
+    """
+    Print utilization stats and per-bin-type breakdown to stdout.
+
+    Let R = #placed parts, B = #bin types.
+    Time:  O(R + B) — one pass over results to aggregate, one pass over bins to print.
+    Space: O(B) — three defaultdicts keyed by bin type.
+    """
     total_used = sum(r["bins_used"] for r in results)
     total_avail = sum(int(b["num_available"]) for b in bins_rows)
 
