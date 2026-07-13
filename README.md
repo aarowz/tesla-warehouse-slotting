@@ -10,6 +10,7 @@
   - [Greedy solver](#greedy-solver)
   - [ILP solver (OR-Tools CP-SAT)](#ilp-solver-or-tools-cp-sat)
 - [Edge cases handled](#edge-cases-handled)
+- [If a pool ran out](#if-a-pool-ran-out)
 - [Project structure](#project-structure)
 - [Running the code](#running-the-code)
 
@@ -152,6 +153,16 @@ For this dataset (45 parts × 5 bin types = ≤225 binary variables, 50 constrai
 | Small Shelf (250 lb cap)                                                     | Too small for almost every part; ends up unused                                                  |
 | Hazmat pool (30 bins, 7 parts)                                               | Hazmat parts assigned first; 20 of 30 bins used, no shortfall                                    |
 | Bulk Rack / Floor Spot fully exhausted                                       | Greedy order ensures high-priority parts claim them first; all parts placed before pool runs out |
+
+---
+
+## If a pool ran out
+
+In this run every part was placed, but **Bulk Rack** (40/40) and **Floor Spot** (35/35) were fully exhausted by the greedy solver. If the pools had been tighter and parts were left unplaceable, the options are:
+
+1. **Fall back to the next-best bin type** — the greedy solver already does this automatically when the preferred type runs dry.
+2. **Re-optimize globally** — the ILP solver shares the finite pools across all parts simultaneously, avoiding the local-optima exhaustion that greedy ordering can cause. It recovered 3 Bulk Rack bins (40 → 37) and is the right first move when any pool runs short.
+3. **Request additional bins** — if even the ILP cannot place all parts, the solver reports exactly which types are over-subscribed and by how many, giving procurement a precise reorder quantity.
 
 ---
 
