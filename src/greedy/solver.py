@@ -15,7 +15,7 @@ def solve():
     Greedy slotting: read data, assign each part to a bin type, write results.
 
     Let P = #parts, B = #bin types, K = #packaging rows (≤ 3P).
-    Time:  O(P·B log B + K)
+    Time:  O(P · B log B + K)
            — sorting parts is O(P log P); per part we score B candidates in
              O(B) and sort them in O(B log B); packaging lookup build is O(K).
     Space: O(P + K + B)

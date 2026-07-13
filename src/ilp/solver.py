@@ -20,9 +20,9 @@ def solve_ilp():
     Raises RuntimeError if CP-SAT cannot prove the solution is globally optimal.
 
     Let P = #parts, B = #bin types, K = #packaging rows.
-    Time (end-to-end): O(P·B + K) to build, exponential worst-case to solve —
-                       instant in practice for P=45, B=5.
-    Space: O(P·B).
+    Time (end-to-end): O(P · B + K) to build, exponential worst-case to solve —
+                       instant in practice for P = 45, B = 5.
+    Space: O(P · B).
     """
     parts_rows = read_csv(DATA_DIR / "parts.csv")
     pkg_rows = read_csv(DATA_DIR / "packaging.csv")

@@ -15,7 +15,7 @@ def build_feasibility_map(parts_rows, pkg_levels, bins_rows, zones):
         part_decomps : {pid: (n_pallet, n_case, n_each)}
         feasible     : {(pid, bin_type): bins_needed}  — only entries where bins_needed > 0
 
-    Time: O(P·B + K). Space: O(P·B).
+    Time: O(P · B + K). Space: O(P · B).
     """
     part_decomps = {}
     feasible = {}
@@ -43,15 +43,15 @@ def build_model(parts_rows, bins_rows, feasible, pool_sizes):
     Variables  : assign[pid, bt] ∈ {0, 1} for each (pid, bt) in feasible.
     Constraints:
         (1) sum_bt assign[pid, bt] = 1   for each part with ≥1 feasible option
-        (2) sum_pid bins_needed[pid,bt] * assign[pid,bt] ≤ pool[bt]  for each bin type
-    Objective  : minimise sum_{pid,bt} bins_needed[pid,bt] * assign[pid,bt]
+        (2) sum_pid bins_needed[pid, bt] * assign[pid, bt] ≤ pool[bt]  for each bin type
+    Objective  : minimise sum_{pid, bt} bins_needed[pid, bt] * assign[pid, bt]
 
     Returns:
         model            : CpModel
         assign           : {(pid, bt): BoolVar}
         unplaceable_pids : set of part IDs with no feasible bin type
 
-    Time: O(P·B). Space: O(P·B).
+    Time: O(P · B). Space: O(P · B).
     """
     model = cp_model.CpModel()
     assign = {key: model.NewBoolVar(f"x_{key[0]}_{key[1]}") for key in feasible}
