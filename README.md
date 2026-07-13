@@ -1,14 +1,31 @@
 # Warehouse Slotting Optimization — Solution
 
+## Table of Contents
+
+- [Results](#results)
+  - [Greedy](#greedy)
+  - [ILP (OR-Tools CP-SAT)](#ilp-or-tools-cp-sat)
+  - [Comparison](#comparison)
+- [Approach](#approach)
+  - [Greedy solver](#greedy-solver)
+  - [ILP solver (OR-Tools CP-SAT)](#ilp-solver-or-tools-cp-sat)
+- [Edge cases handled](#edge-cases-handled)
+- [Project structure](#project-structure)
+- [Running the code](#running-the-code)
+
+---
+
 ## Results
+
+Both a **greedy** solver and a **global ILP** solver (OR-Tools CP-SAT) were implemented and compared.
+
+### Greedy
 
 | Metric            | Value                                      |
 | ----------------- | ------------------------------------------ |
 | Parts placed      | **45 / 45** (100%)                         |
 | Total bins used   | **113** (55% of 205 bins across all types) |
 | Unplaceable parts | **0**                                      |
-
-**Bins used by type:**
 
 | Bin type      | Used | Available | Vol util | Wt util |
 | ------------- | ---- | --------- | -------- | ------- |
@@ -18,15 +35,44 @@
 | Floor Spot    | 35   | 35        | 11%      | 11%     |
 | Hazmat Rack   | 20   | 30        | 17%      | 20%     |
 
-All four constraints (fit, weight, finite pools, hazmat routing) are satisfied for every part. Every part was successfully placed — no bin pool ran dry before all parts were assigned.
+### ILP (OR-Tools CP-SAT)
 
-Two pool types were fully exhausted: **Bulk Rack** (40/40) and **Floor Spot** (35/35). The greedy ordering (most-constrained parts first) was key here — had Floor Spot been depleted by lower-priority parts, the heavyweight pallets (P0010, P0021, P0023, P0029, whose pallets exceed 1,750 lb and can only go in Floor Spot) would have had nowhere to go.
+| Metric            | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Parts placed      | **45 / 45** (100%)                         |
+| Total bins used   | **107** (52% of 205 bins across all types) |
+| Unplaceable parts | **0**                                      |
+
+| Bin type      | Used | Available | Vol util | Wt util |
+| ------------- | ---- | --------- | -------- | ------- |
+| Small Shelf   | 0    | 40        | —        | —       |
+| Standard Rack | 15   | 60        | 20%      | 23%     |
+| Bulk Rack     | 37   | 40        | 18%      | 31%     |
+| Floor Spot    | 35   | 35        | 13%      | 14%     |
+| Hazmat Rack   | 20   | 30        | 17%      | 20%     |
+
+### Comparison
+
+| Metric          | Greedy | ILP   |
+| --------------- | ------ | ----- |
+| Parts placed    | 45     | 45    |
+| Total bins used | 113    | 107   |
+| Bins saved      | —      | **6** |
+| Wall time       | ~1 ms  | ~7 ms |
+
+The ILP finds the **globally optimal** assignment — 6 fewer bins than greedy by better balancing the Bulk Rack / Floor Spot tradeoff across all parts simultaneously. Both solvers satisfy all four constraints for every part.
+
+> This fulfills the stretch goal from the problem statement: _"an assignment that shares the finite pools optimally (e.g., an integer program)."_
+
+All four constraints (fit, weight, finite pools, hazmat routing) are satisfied for every part.
 
 ---
 
 ## Approach
 
-### 1. Breaking quantity into packages
+### Greedy solver
+
+#### 1. Breaking quantity into packages
 
 For each part, inventory is decomposed **largest-first**: as many full pallets as possible, then cases with the remainder, then loose eaches. This minimizes the number of individual packages and therefore the number of bins needed.
 
@@ -37,7 +83,7 @@ Example — P0037, qty 1203, pallet=531 units, case=59 units:
   23 loose eaches
 ```
 
-### 2. Packages-per-bin calculation
+#### 2. Packages-per-bin calculation
 
 For a given package form in a candidate bin type, two limits are computed and the binding one is taken:
 
@@ -49,7 +95,7 @@ For a given package form in a candidate bin type, two limits are computed and th
 
 If `packages_per_bin == 0` for any package form a part needs, that bin type is **infeasible** for that part.
 
-### 3. Total bins per part
+#### 3. Total bins per part
 
 Since all package forms of a part must go in the same bin type, the bins needed are summed across forms:
 
@@ -60,18 +106,39 @@ bins_for_eaches  = ceil(n_each   / each_per_bin)
 total_bins       = sum of the above
 ```
 
-### 4. Bin-type selection
+#### 4. Bin-type selection
 
 For each part, all compatible bin types (matching zone) are scored by `total_bins`. Ties are broken by bin volume — preferring the smallest feasible bin so that large bins remain available for parts that truly need them.
 
-### 5. Pool management
+#### 5. Pool management
 
-Parts are assigned greedily in **most-constrained-first** order:
+Parts are assigned in **most-constrained-first** order:
 
 1. Hazmat parts first (only one bin zone available to them)
 2. Within each group, largest quantity first (harder to absorb into a dwindling pool)
 
-When the preferred bin type has insufficient remaining bins, the algorithm falls back to the next-best feasible type. All unplaceable parts (none in this run) are reported with the reason.
+When the preferred bin type has insufficient remaining bins, the algorithm falls back to the next-best feasible type.
+
+**Complexity:** O(P·B log B + K) time, O(P + K + B) space — where P = #parts, B = #bin types, K = #packaging rows.
+
+---
+
+### ILP solver (OR-Tools CP-SAT)
+
+The ILP formulates bin assignment as a binary integer program solved to **proven global optimality**:
+
+**Variables:** `assign[part, bin_type] ∈ {0, 1}` for each feasible (part, bin_type) pair — 1 if that part is assigned to that bin type.
+
+**Constraints:**
+
+1. Each part assigned to exactly one bin type: `∑_bt assign[p, bt] = 1`
+2. Pool capacity per bin type: `∑_p bins_needed[p, bt] × assign[p, bt] ≤ pool[bt]`
+
+**Objective:** minimise `∑_{p,bt} bins_needed[p, bt] × assign[p, bt]`
+
+For this dataset (45 parts × 5 bin types = ≤225 binary variables, 50 constraints), CP-SAT proves optimality in under 10 ms. The solver raises an error if it terminates without proving optimality, so the result is always guaranteed optimal.
+
+**Complexity (model build):** O(P·B + K) time, O(P·B) space.
 
 ---
 
@@ -88,21 +155,12 @@ When the preferred bin type has insufficient remaining bins, the algorithm falls
 
 ---
 
-## If a pool ran out
-
-If the Bulk Rack or Floor Spot pools were exhausted before all parts could be placed, the options would be:
-
-1. **Fall back to the next-best bin type** — the algorithm already does this automatically.
-2. **Request additional bins** — report exactly which types are over-subscribed and by how many.
-3. **Re-optimize globally** — use an integer program to share the finite pools across all parts simultaneously rather than greedily. This can reduce total bins used and avoid local-optima pool exhaustion (see stretch goal in the problem statement).
-
----
-
 ## Project structure
 
 ```
 intern_case_study/
-├── conftest.py          ← adds src/ to path for test imports
+├── conftest.py              ← adds src/ to path for test imports
+├── requirements.txt         ← ortools
 ├── data/
 │   ├── bins.csv
 │   ├── packaging.csv
@@ -110,32 +168,39 @@ intern_case_study/
 ├── instructions/
 │   └── PROBLEM_STATEMENT.md
 ├── output/
-│   └── slotting_plan.csv
+│   ├── slotting_plan.csv      ← greedy output
+│   └── slotting_plan_ilp.csv  ← ILP output
 ├── src/
-│   ├── main.py          ← entry point
-│   ├── csv_io.py        ← CSV helpers and data path constants
-│   ├── packing.py       ← pure calculation functions (fit, decomposition, bins needed)
-│   ├── report.py        ← summary printing and utilization stats
-│   └── solver.py        ← greedy assignment orchestration
+│   ├── main.py              ← entry point (runs both solvers + comparison)
+│   ├── csv_io.py            ← CSV helpers and data path constants
+│   ├── compare.py           ← side-by-side greedy vs ILP printout
+│   ├── packing.py           ← pure calculation functions (fit, decomposition, bins needed)
+│   ├── report.py            ← summary printing and utilization stats
+│   ├── greedy/
+│   │   └── solver.py        ← greedy assignment orchestration
+│   └── ilp/
+│       ├── model.py         ← CP-SAT model: feasibility map + constraint/objective build
+│       └── solver.py        ← ILP orchestration (I/O, solve, result extraction)
 └── tests/
-    └── test_slot.py
+    ├── test_slot.py     ← 33 unit + integration tests for greedy solver
+    └── test_ilp.py      ← 6 correctness + optimality tests for ILP solver
 ```
 
 ## Running the code
 
-**Requirements:** Python 3.8+, pytest (tests only). No third-party packages needed.
+**Requirements:** Python 3.8+, OR-Tools, pytest (tests only).
 
 ```bash
-# Install pytest if you don't have it
-pip install pytest
+# Install dependencies
+pip install -r requirements.txt
 
-# Run the solver — reads data/*.csv, prints summary, writes output/slotting_plan.csv
+# Run both solvers — prints summaries and comparison, writes output/*.csv
 python3 src/main.py
 
-# Run the tests
+# Run all 39 tests
 pytest tests/ -v
 ```
 
-The solver output (slotting plan + summary) is already pre-generated in `output/slotting_plan.csv` if you just want to inspect the results without running anything.
+The pre-generated output is in `output/` if you want to inspect results without running anything.
 
 Please feel free to reach out at zhou.aa@northeastern.edu for any questions!

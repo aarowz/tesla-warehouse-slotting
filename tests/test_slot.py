@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
+from greedy.solver import solve
 from packing import (
     break_quantity,
     part_volume_and_weight,
     pkgs_per_bin,
     total_bins_needed,
 )
-from solver import solve
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 

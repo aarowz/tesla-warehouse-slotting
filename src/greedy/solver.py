@@ -110,13 +110,15 @@ def solve():
     results.sort(key=lambda r: r["part_id"])
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    greedy_csv = OUTPUT_DIR / "slotting_plan.csv"
     write_csv(
-        OUTPUT_DIR / "slotting_plan.csv",
+        greedy_csv,
         results,
         ["part_id", "bin_type", "n_pallet", "n_case", "n_each", "bins_used"],
     )
-
-    print_summary(results, unplaceable, bins_rows, pkg_levels)
+    print_summary(
+        results, unplaceable, bins_rows, pkg_levels, output_path=str(greedy_csv)
+    )
 
     bins_used_by_type = defaultdict(int)
     for r in results:

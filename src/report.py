@@ -7,7 +7,9 @@ from collections import defaultdict
 from packing import part_volume_and_weight
 
 
-def print_summary(results, unplaceable, bins_rows, pkg_levels):
+def print_summary(
+    results, unplaceable, bins_rows, pkg_levels, output_path="output/slotting_plan.csv"
+):
     """
     Print utilization stats and per-bin-type breakdown to stdout.
 
@@ -73,4 +75,4 @@ def print_summary(results, unplaceable, bins_rows, pkg_levels):
         print("All parts successfully placed.")
 
     print()
-    print("Slotting plan written to output/slotting_plan.csv")
+    print(f"Slotting plan written to {output_path}")
