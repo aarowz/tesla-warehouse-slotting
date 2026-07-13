@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [Running the code](#running-the-code)
 - [Results](#results)
   - [Greedy](#greedy)
   - [ILP (OR-Tools CP-SAT)](#ilp-or-tools-cp-sat)
@@ -12,7 +13,25 @@
 - [Edge cases handled](#edge-cases-handled)
 - [If a pool ran out](#if-a-pool-ran-out)
 - [Project structure](#project-structure)
-- [Running the code](#running-the-code)
+
+---
+
+## Running the code
+
+**Requirements:** Python 3.8+, OR-Tools, pytest (tests only).
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run both solvers — prints summaries and comparison, writes output/*.csv
+python3 src/main.py
+
+# Run all 39 tests
+pytest tests/ -v
+```
+
+The pre-generated output is in `output/` if you want to inspect results without running anything.
 
 ---
 
@@ -196,22 +215,5 @@ intern_case_study/
     ├── test_slot.py     ← 33 unit + integration tests for greedy solver
     └── test_ilp.py      ← 6 correctness + optimality tests for ILP solver
 ```
-
-## Running the code
-
-**Requirements:** Python 3.8+, OR-Tools, pytest (tests only).
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run both solvers — prints summaries and comparison, writes output/*.csv
-python3 src/main.py
-
-# Run all 39 tests
-pytest tests/ -v
-```
-
-The pre-generated output is in `output/` if you want to inspect results without running anything.
 
 Please feel free to reach out at zhou.aa@northeastern.edu for any questions!
